@@ -1,9 +1,15 @@
-package main
+package dino
 
 import (
 	"github.com/nu7hatch/gouuid"
 	"math/rand"
 	"time"
+)
+
+const (
+	BATCH        = "batch"
+	INTERACTIVE  = "interactive"
+	WAITING_TIME = "been_waiting"
 )
 
 type Process struct {
@@ -14,11 +20,13 @@ type Process struct {
 	CpuBurst time.Duration
 	IOBurst  time.Duration
 	SizeInKB int
+	Info     map[string]interface{}
 }
 
-func RandomProccess() *Process {
+func RandomProcess() *Process {
 	uuid, _ := uuid.NewV4()
 	uuidString := uuid.String()
+
 	return &Process{
 		ID:       uuidString,
 		Name:     abbrev(uuidString),
@@ -26,6 +34,7 @@ func RandomProccess() *Process {
 		Lifespan: randomDuration(MICROSECONDS, 1, 100),
 		CpuBurst: randomDuration(MICROSECONDS, 1, 100),
 		IOBurst:  randomDuration(MICROSECONDS, 100, 400),
-		SizeInKB: rand.Int()%(TOTAL_MEMORY/5) + 1,
+		SizeInKB: rand.Int()%(TotalMemory/5) + 1,
+		Info:     make(map[string]interface{}, 0),
 	}
 }
