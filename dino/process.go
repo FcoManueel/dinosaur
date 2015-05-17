@@ -20,10 +20,13 @@ type Process struct {
 	CpuBurst time.Duration
 	IOBurst  time.Duration
 	SizeInKB int
-	Info     map[string]interface{}
+
+	IsAllocated   bool
+	MemoryAddress int
+	//Info        map[string]interface{}
 }
 
-func RandomProcess() *Process {
+func (d *Dino) RandomProcess() *Process {
 	uuid, _ := uuid.NewV4()
 	uuidString := uuid.String()
 
@@ -34,7 +37,7 @@ func RandomProcess() *Process {
 		Lifespan: randomDuration(MICROSECONDS, 1, 100),
 		CpuBurst: randomDuration(MICROSECONDS, 1, 100),
 		IOBurst:  randomDuration(MICROSECONDS, 100, 400),
-		SizeInKB: rand.Int()%(TotalMemory/5) + 1,
-		Info:     make(map[string]interface{}, 0),
+		SizeInKB: rand.Int()%(d.memorySize/5) + 1,
+		//Info:     make(map[string]interface{}, 0),
 	}
 }

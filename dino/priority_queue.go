@@ -19,7 +19,7 @@ type PriorityQueue []*Item
 //algorithm string // e.g. RoundRobin
 //meta map[string]interface{}
 
-func (i *Item) Priority() {
+func (i *Item) Priority() int {
 	return i.priority
 }
 
@@ -36,32 +36,33 @@ func (pq PriorityQueue) Swap(i, j int) {
 	pq[j].index = j
 }
 
-func (pq *PriorityQueue) Push(x interface{}) {
-	n := len(*pq)
+func (pq PriorityQueue) Push(x interface{}) {
+	n := len(pq)
 	item := x.(*Item)
 	item.index = n
-	item.priority = -1 * item.process.Lifespan.String()
-	*pq = append(*pq, item)
+	// TODO check this. Is Shortest Job First, i suppose, don't remember haha
+	item.priority = -1 * int(item.process.Lifespan.Nanoseconds())
+	pq = append(pq, item)
 }
 
-func (pq *PriorityQueue) Pop() interface{} {
-	old := *pq
+func (pq PriorityQueue) Pop() interface{} {
+	old := pq
 	n := len(old)
 	item := old[n-1]
 	item.index = -1 // for safety
-	*pq = old[0 : n-1]
+	pq = old[0 : n-1]
 	return item
 }
 
-func (pq *PriorityQueue) AgeAll() {
+func (pq PriorityQueue) AgeAll() {
 	for i, _ := range pq {
 		pq[i].priority += 1
 	}
 }
 
-func (pq *PriorityQueue) popShortest() *Process {
-	shortestSoFar := TotalMemory
-	var selectedProcess Process
+func (pq PriorityQueue) popShortest() *Process {
+	shortestSoFar := MAX_DURATION
+	var selectedProcess *Process
 	heap.Pop(pq)
 	for i := range pq {
 		if lifespan := pq[i].process.Lifespan; lifespan < shortestSoFar {
@@ -69,11 +70,11 @@ func (pq *PriorityQueue) popShortest() *Process {
 			selectedProcess = pq[i].process
 		}
 	}
-	return &selectedProcess
+	return selectedProcess
 }
 
 // update modifies the priority and value of an Item in the queue.
-func (pq *PriorityQueue) update(item *Item, p *Process, priority int) {
+func (pq PriorityQueue) update(item *Item, p *Process, priority int) {
 	item.process = p
 	item.priority = priority
 	heap.Fix(pq, item.index)
