@@ -2,6 +2,7 @@ package dino
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -20,6 +21,7 @@ type Dino struct {
 }
 
 type Scheduler interface {
+	sync.Mutex // adds Lock() & Unlock() methods for concurrency
 	Name() string
 	Get() *Process
 	Add(*Process)
