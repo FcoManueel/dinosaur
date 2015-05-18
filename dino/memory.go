@@ -167,11 +167,11 @@ func (m Memory) Layout() MemoryLayout {
 	previousWasEmpty := false
 
 	for i, _ := range m {
-		if m[i] == nil && previousWasEmpty == false { // starting empty string
+		if m[i] == nil && previousWasEmpty == false { // starting empty block
 			currentBlock = &MemoryBlock{Start: i, Size: 0, Name: FREE_BLOCK}
 			layout = append(layout, currentBlock)
 			previousWasEmpty = true
-		} else if m[i] != nil && i == 0 || m[i-1] != m[i] { // starting nonempty string
+		} else if m[i] != nil && i == 0 || m[i-1] != m[i] { // starting nonempty block
 			currentBlock = &MemoryBlock{Start: i, Size: 0, Name: m[i].Name}
 			layout = append(layout, currentBlock)
 			previousWasEmpty = false
@@ -181,10 +181,21 @@ func (m Memory) Layout() MemoryLayout {
 	return layout
 }
 
+func (m Memory) TotalFree() int {
+	total := 0
+	for i := range m {
+		if m[i] == nil {
+			total++
+		}
+	}
+	return total
+}
+
 func (ml MemoryLayout) String() string {
 	str := "\n\t\t------------ MemoryLayout ------------\n"
+	str += fmt.Sprintf("\t\t\t[init, size,  end]\t-\towner\n")
 	for i, _ := range ml {
-		str += fmt.Sprintf("\t\t\t[%d, %d] - %s\n", ml[i].Start, ml[i].Start+ml[i].Size-1, ml[i].Name)
+		str += fmt.Sprintf("\t\t\t[%4d, %4d, %4d]\t-\t%2s\n", ml[i].Start, ml[i].Size, ml[i].Start+ml[i].Size-1, ml[i].Name)
 	}
 	return str
 }

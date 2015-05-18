@@ -1,6 +1,9 @@
 package dino
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type Queue struct {
 	name      string
@@ -35,9 +38,12 @@ func (q *Queue) Name() string {
 }
 
 func (q *Queue) String() string {
-	str := "\n\t\t------------ " + q.name + " ------------\n\t\t"
+	str := "\n\t\t------------ " + q.name + " ------------"
 	for i, _ := range q.processes {
-		str += " '" + q.processes[i].Name + "' "
+		if i%5 == 0 {
+			str += "\n\t\t"
+		}
+		str += fmt.Sprintf(" ['%s', %2d, %2dKB] ", q.processes[i].Name, q.processes[i].Lifespan(), q.processes[i].SizeInKB)
 	}
 	return str + "\n"
 }

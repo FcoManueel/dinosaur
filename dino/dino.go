@@ -26,6 +26,7 @@ func New(totalMemory int) *Dino {
 }
 
 type DinoState struct {
+	FreeMemory int
 	Memory     string
 	NewQueue   string
 	ReadyQueue string
@@ -33,13 +34,14 @@ type DinoState struct {
 
 func (d *Dino) State() *DinoState {
 	return &DinoState{
+		FreeMemory: d.memory.TotalFree(),
 		Memory:     d.memory.Layout().String(),
 		NewQueue:   d.newQueue.String(),
 		ReadyQueue: d.readyQueue.String(),
 	}
 }
 func (ds *DinoState) String() string {
-	return ds.Memory + ds.NewQueue + ds.ReadyQueue
+	return fmt.Sprintf("\n\tFree Memory: %d \n%s%s%s", ds.FreeMemory, ds.Memory, ds.NewQueue, ds.ReadyQueue)
 }
 
 // Run a simulation of the Dino, during max_epoch iterations. If max_epoch <1, run indefinitely
@@ -87,7 +89,10 @@ func (d *Dino) Step() (err error) {
 				panic("Error while getting process from New queue")
 			}
 			ready.Add(p)
+		} else if totalFree := d.memory.TotalFree(); p.SizeInKB <= totalFree {
+			fmt.Printf("\tFragmentation exists. The process %s with size %d would fit in the %dKB of free memory if it was compacted\n", p.Name, p.SizeInKB, totalFree)
 		}
+
 	}
 
 	processReady, err := ready.Get()
