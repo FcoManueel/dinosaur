@@ -41,7 +41,7 @@ func (pq PriorityQueue) Push(x interface{}) {
 	item := x.(*Item)
 	item.index = n
 	// TODO check this. Is Shortest Job First, i suppose, don't remember haha
-	item.priority = -1 * int(item.process.Lifespan.Nanoseconds())
+	item.priority = -1 * item.process.Lifespan
 	pq = append(pq, item)
 }
 
@@ -61,7 +61,7 @@ func (pq PriorityQueue) AgeAll() {
 }
 
 func (pq PriorityQueue) popShortest() *Process {
-	shortestSoFar := MAX_DURATION
+	shortestSoFar := MAX_INT
 	var selectedProcess *Process
 	heap.Pop(pq)
 	for i := range pq {

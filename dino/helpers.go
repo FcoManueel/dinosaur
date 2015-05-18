@@ -16,15 +16,19 @@ func abbrev(s string) string {
 	}
 }
 
-func randomType() string {
+func randomType() ProcessType {
 	dice := rand.Int() % 2
 	if dice == 0 {
-		return BATCH
+		return PT_NONINTERACTIVE
 	} else {
-		return INTERACTIVE
+		return PT_INTERACTIVE
 	}
 }
 
 func randomDuration(magnitude time.Duration, min, max int) time.Duration {
 	return magnitude * time.Duration(rand.Int()%max+min+1)
+}
+
+func randomInteger(min, max int) int {
+	return rand.Int()%max + min
 }

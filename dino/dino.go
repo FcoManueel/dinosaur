@@ -1,7 +1,8 @@
 package dino
 
 import (
-	"sync"
+	"errors"
+	"fmt"
 	"time"
 )
 
@@ -12,89 +13,76 @@ const (
 )
 
 type Dino struct {
-	memory       Memory
-	memorySize   int
-	processLists Scheduler
+	memory     Memory
+	memorySize int
+	newQueue   Scheduler
+	readyQueue Scheduler
 }
 
-type Scheduler interface {
-	Name() string
-	Get() *Process
-	Add(*Process)
-	Len() int
-}
-
-// Dispatcher: Se encarga de mover procesos de la cola de Ready hacia el CPU para su ejecución (realiza el cambio de contexto)
-type LongTimeSched struct {
-	name      string // e.g. interactive process scheduler
-	algorithm string // e.g. RoundRobin
-	meta      map[string]interface{}
-	PriorityQueue
-	Scheduler
-
-	sync.Mutex // adds Lock() & Unlock() methods for concurrency
-}
-
-func New(totalMemory_ int) *Dino {
+func New(totalMemory int) *Dino {
 	new := &Dino{
-		memorySize: totalMemory_,
-		memory:     make(Memory, totalMemory_),
+		memorySize: totalMemory,
+		memory:     make(Memory, totalMemory),
+		newQueue:   &Queue{name: "New"},
+		readyQueue: &MultilevelQueue{name: "readyQueue", queues: []Scheduler{&Queue{name: string(PT_INTERACTIVE)}, &Queue{name: string(PT_NONINTERACTIVE)}}},
 	}
 	return new
 }
 
-func (d *Dino) Run() {
-	//	new := Queue{}
-	//
-	//	// TODO change this stub for the real thing
-	//	for i := 0; i < 100; i++ {
-	//		fmt.Println("i: ", i)
-	//		if len(new) < 10 {
-	//			p := new.Push(RandomProcess())
-	//			fmt.Printf("A new process %s: %+v\n", p.ID, *p)
-	//		}
-	//
-	//		new.incrementWaitingAll(1)
-	//
-	//		if i%5 == 0 {
-	//			popped := new.Pop()
-	//			fmt.Printf("Just popped %s: %+v\n", popped.ID, *popped)
-	//		}
-	//	}
+// Run a simulation of the Dino, during max_epoch iterations. If max_epoch <1, run indefinitely
+func (d *Dino) Run(max_epoch int) {
+
+	for i := 0; i < max_epoch || max_epoch < 1; i++ {
+		fmt.Println("-------------------o-------------------")
+		fmt.Printf("Start of i: %d \n", i)
+		err := d.Step()
+		if err != nil {
+			fmt.Printf("Error!: %s \n", err.Error())
+		}
+		fmt.Printf("dino: %+v \n", d)
+		//fmt.Printf("state: %+v\n", state)
+		fmt.Printf("End of i: %d \n", i)
+		fmt.Println("-------------------o-------------------")
+	}
 }
 
-//
-///////////////////////////////////////////////////////
-////////////// I think i will delete this /////////////
-///////////////////////////////////////////////////////
-//
-//// Queue is a basic FIFO queue based on a circular list that resizes as needed.
-//type Queue map[string]*Process
-//
-//func (q *Queue) Push(p *Process) *Process {
-//	p.Info[WAITING_TIME] = 0
-//	q[p.ID] = p
-//	return p
-//}
-//
-//func (q Queue) Pop() *Process {
-//	if len(q) == 0 {
-//		return nil
-//	} else {
-//		for _, p := range q {
-//			delete(q, p.ID)
-//			return p
-//		}
-//	}
-//	return nil
-//}
-//
-//func (p *Process) incrementWaiting(inc int) {
-//	p.Info[WAITING_TIME] = p.Info[WAITING_TIME].(int) + inc
-//}
-//
-//func (q Queue) incrementWaitingAll(inc int) {
-//	for _, p := range q {
-//		p.incrementWaiting(inc)
-//	}
-//}
+func (d *Dino) Step() (err error) {
+	new := d.newQueue
+	ready := d.readyQueue
+
+	for new.Len() < 10 {
+		new.Add(d.RandomProcess())
+		p, err := new.Read()
+		if err != nil {
+			return errors.New(fmt.Sprintf("first err: %s\n", err.Error()))
+		}
+		fmt.Println("OMG")
+		err = d.memory.AllocateWorstFit(p)
+		if err == nil {
+			fmt.Println("BBQ")
+			new.Get()
+			ready.Add(p)
+		}
+
+	}
+
+	processReady, err := ready.Get()
+	if err != nil {
+		return err
+	}
+
+	d.CPU(processReady)
+	if processReady.ProgramCounter < processReady.Lifespan {
+		d.memory.ReleaseProcess(processReady)
+	} else {
+		ready.Add(processReady)
+	}
+	return nil
+}
+
+func (d *Dino) CPU(p *Process) {
+	//TODO change this for something more sophisticated
+	for p.ProgramCounter < p.Lifespan {
+		p.ProgramCounter++
+	}
+}

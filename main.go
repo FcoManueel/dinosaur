@@ -7,12 +7,10 @@ import (
 
 func main() {
 	fmt.Println("Hello dinosaur! Enjoy your evolution. ")
-	p1 := dino.RandomProcess()
-	fmt.Printf("%+v\n", p1)
 
-	d := dino.New(1024)
-	d.Run()
+	d := dino.New(20)
 
+	d.Run(5)
 	//  // I think that this way will make easier the communication with the front end
 	//    i := 0
 	//    for {

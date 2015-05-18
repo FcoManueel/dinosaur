@@ -89,12 +89,16 @@ func (m Memory) Allocate(p *Process, start int) (err error) {
 }
 
 func (m Memory) AllocateWorstFit(p *Process) (err error) {
+	if p == nil {
+		return errors.New("Cannot allocate -- nil process")
+	}
 	start, _, err := m.WorstFit(p.SizeInKB)
 	if err != nil {
 		return err
 	}
 
-	return m.Allocate(p, start)
+	err = m.Allocate(p, start)
+	return err
 }
 
 func (m Memory) hardRelease(start, offset int) (err error) {
