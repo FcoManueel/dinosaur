@@ -1,9 +1,10 @@
 package dino
 
 import (
+	"testing"
+
 	"github.com/nu7hatch/gouuid"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func testProcess() *Process {

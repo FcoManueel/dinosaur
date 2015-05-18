@@ -1,8 +1,9 @@
 package dino
 
 import (
-	"github.com/nu7hatch/gouuid"
 	"time"
+
+	"github.com/nu7hatch/gouuid"
 )
 
 const (
