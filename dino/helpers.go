@@ -2,7 +2,6 @@ package dino
 
 import (
 	"math/rand"
-	"time"
 )
 
 const ()
@@ -25,10 +24,34 @@ func randomType() ProcessType {
 	}
 }
 
-func randomDuration(magnitude time.Duration, min, max int) time.Duration {
-	return magnitude * time.Duration(rand.Int()%max+min+1)
+func randomBursts(processType ProcessType, minLifespan, maxLifespan int) Bursts {
+	lifespan := randomInteger(minLifespan, maxLifespan)
+	cpu := 1
+	io := 1
+	if processType == PT_INTERACTIVE { // cpu/io -- min: 0.5   max: 0.8
+		cpu = randomInteger(50, 80)
+		io = 100
+	} else if processType == PT_NONINTERACTIVE { // cpu/io -- min: 0.8   max: 1
+		cpu = randomInteger(80, 100)
+		io = 100
+	}
+	cpuBoundingCoefficient := float64(cpu) / float64(io)
+
+	bursts := make(Bursts, lifespan)
+	for i := 0; i < lifespan; i++ {
+		roulette := rand.Float64()
+		rouletteSaysCpu := roulette < cpuBoundingCoefficient
+		if rouletteSaysCpu {
+			bursts[i] = BT_CPU
+		} else {
+			bursts[i] = BT_IO
+		}
+	}
+	return bursts
 }
 
 func randomInteger(min, max int) int {
-	return rand.Int()%max + min
+	randInt := rand.Int()%(max-min) + min
+	//	fmt.Println("Random: ", randInt)
+	return randInt
 }

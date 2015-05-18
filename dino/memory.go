@@ -7,6 +7,20 @@ import (
 
 type Memory []*Process
 
+type MemoryLayout []*MemoryBlock
+type MemoryBlock struct {
+	Start int
+	Size  int
+	Name  string
+}
+
+const FREE_BLOCK = string('▓')
+
+func (m Memory) HasSpace(size int) bool {
+	_, _, err := m.WorstFit(size)
+	return err == nil
+}
+
 func (m Memory) WorstFit(sizeToFit int) (start, offset int, err error) {
 	bestStart := -1
 	bestSize := 0
@@ -143,4 +157,34 @@ func (m Memory) ReleaseProcess(p *Process) (bool, error) {
 	p.IsAllocated = false
 	p.MemoryAddress = -1
 	return beenReleased, nil
+}
+
+func (m Memory) Layout() MemoryLayout {
+	layout := make(MemoryLayout, 0)
+
+	var currentBlock *MemoryBlock
+
+	previousWasEmpty := false
+
+	for i, _ := range m {
+		if m[i] == nil && previousWasEmpty == false { // starting empty string
+			currentBlock = &MemoryBlock{Start: i, Size: 0, Name: FREE_BLOCK}
+			layout = append(layout, currentBlock)
+			previousWasEmpty = true
+		} else if m[i] != nil && i == 0 || m[i-1] != m[i] { // starting nonempty string
+			currentBlock = &MemoryBlock{Start: i, Size: 0, Name: m[i].Name}
+			layout = append(layout, currentBlock)
+			previousWasEmpty = false
+		}
+		currentBlock.Size++
+	}
+	return layout
+}
+
+func (ml MemoryLayout) String() string {
+	str := "\n\t\t------------ MemoryLayout ------------\n"
+	for i, _ := range ml {
+		str += fmt.Sprintf("\t\t\t[%d, %d] - %s\n", ml[i].Start, ml[i].Start+ml[i].Size-1, ml[i].Name)
+	}
+	return str
 }

@@ -8,9 +8,9 @@ import (
 func main() {
 	fmt.Println("Hello dinosaur! Enjoy your evolution. ")
 
-	d := dino.New(20)
+	d := dino.New(100)
 
-	d.Run(5)
+	d.Run(100)
 	//  // I think that this way will make easier the communication with the front end
 	//    i := 0
 	//    for {

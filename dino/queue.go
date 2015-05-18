@@ -33,3 +33,11 @@ func (q *Queue) Len() int {
 func (q *Queue) Name() string {
 	return q.name
 }
+
+func (q *Queue) String() string {
+	str := "\n\t\t------------ " + q.name + " ------------\n\t\t"
+	for i, _ := range q.processes {
+		str += " '" + q.processes[i].Name + "' "
+	}
+	return str + "\n"
+}

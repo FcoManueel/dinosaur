@@ -9,19 +9,19 @@ import (
 func testProcess() *Process {
 	uuid, _ := uuid.NewV4()
 	uuidString := uuid.String()
+	cpu := BurstType(BT_CPU)
+	bursts := Bursts{cpu, cpu, cpu, cpu, cpu}
 
 	return &Process{
 		ID:            uuidString,
 		Name:          abbrev(uuidString),
 		Type:          randomType(),
-		Lifespan:      10,
-		CpuBurst:      MICROSECONDS * 100,
-		IOBurst:       MICROSECONDS * 100,
 		SizeInKB:      10,
+		Bursts:        bursts,
 		IsAllocated:   false,
 		MemoryAddress: -1,
-		//Info:     make(map[string]interface{}, 0),
 	}
+
 }
 
 func TestQueueAdd(t *testing.T) {

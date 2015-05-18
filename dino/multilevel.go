@@ -64,3 +64,11 @@ func (m *MultilevelQueue) Len() int {
 	}
 	return length
 }
+
+func (m *MultilevelQueue) String() string {
+	str := "\n\n\t\t--------------------- " + m.name + " ---------------------\n"
+	for i, _ := range m.queues {
+		str += m.queues[i].String() + "\n"
+	}
+	return str
+}

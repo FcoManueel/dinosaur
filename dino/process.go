@@ -6,42 +6,50 @@ import (
 )
 
 const (
-	PT_INTERACTIVE    = ProcessType("interactive")
-	PT_NONINTERACTIVE = ProcessType("noninteractive")
+	// Process Types
+	PT_INTERACTIVE    = ProcessType("interactive_process")
+	PT_NONINTERACTIVE = ProcessType("noninteractive_process")
+
+	// Burst Types
+	BT_CPU = iota
+	BT_IO
 )
 
 type Processes []*Process
 type ProcessType string
 
+type Bursts []BurstType
+type BurstType int
+
 type Process struct {
 	ID             string
 	Name           string
 	Type           ProcessType
-	Lifespan       int
 	ProgramCounter int
-	CpuBurst       time.Duration
+	Bursts         Bursts
 	IOBurst        time.Duration
 	SizeInKB       int
 
 	IsAllocated   bool
 	MemoryAddress int
-	//Info        map[string]interface{}
 }
 
 func (d *Dino) RandomProcess() *Process {
 	uuid, _ := uuid.NewV4()
 	uuidString := uuid.String()
+	processType := randomType()
 
 	return &Process{
 		ID:            uuidString,
 		Name:          abbrev(uuidString),
-		Type:          randomType(),
-		Lifespan:      randomInteger(1, 100),
-		CpuBurst:      randomDuration(MICROSECONDS, 1, 100),
-		IOBurst:       randomDuration(MICROSECONDS, 100, 400),
+		Type:          processType,
+		Bursts:        randomBursts(processType, 3, 10),
 		SizeInKB:      randomInteger(1, d.memorySize/5),
 		IsAllocated:   false,
 		MemoryAddress: -1,
-		//Info:     make(map[string]interface{}, 0),
 	}
+}
+
+func (p *Process) Lifespan() int {
+	return len(p.Bursts)
 }
