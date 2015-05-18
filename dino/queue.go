@@ -37,13 +37,11 @@ func (q *Queue) Name() string {
 	return q.name
 }
 
-func (q *Queue) String() string {
-	str := "\n\t\t------------ " + q.name + " ------------"
+func (q *Queue) String() []string {
+	stringSlice := []string{}
+	//str := "\n\t\t------------ " + q.name + " ------------"
 	for i, _ := range q.processes {
-		if i%5 == 0 {
-			str += "\n\t\t"
-		}
-		str += fmt.Sprintf(" ['%s', %2d, %2dKB] ", q.processes[i].Name, q.processes[i].Lifespan(), q.processes[i].SizeInKB)
+		stringSlice = append(stringSlice, fmt.Sprintf(" ['%s', %2d, %2dKB] ", q.processes[i].Name, q.processes[i].Lifespan(), q.processes[i].SizeInKB))
 	}
-	return str + "\n"
+	return stringSlice
 }

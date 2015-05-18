@@ -9,39 +9,39 @@ const (
 )
 
 type Dino struct {
-	memory     Memory
+	Memory     Memory
 	memorySize int
 	newQueue   Scheduler
 	readyQueue Scheduler
+	state      *DinoState
 }
 
 func New(totalMemory int) *Dino {
 	new := &Dino{
 		memorySize: totalMemory,
-		memory:     make(Memory, totalMemory),
+		Memory:     make(Memory, totalMemory),
 		newQueue:   &Queue{name: "New Queue"},
 		readyQueue: &MultilevelQueue{name: "Ready Multilevel", queues: []Scheduler{&Queue{name: string(PT_INTERACTIVE)}, &Queue{name: string(PT_NONINTERACTIVE)}}},
+		state:      &DinoState{},
 	}
 	return new
 }
 
 type DinoState struct {
-	FreeMemory int
-	Memory     string
-	NewQueue   string
-	ReadyQueue string
+	FreeMemory           int
+	Memory               MemoryLayout
+	MemoryArray          MemoryLayout
+	NewQ                 []string
+	InteractiveQ         []string
+	ExtFragmentation     bool
+	ExecutedByCPU        *Process
+	ExecutedByIO         *Process
+	FragmentationProcess *Process
+	Message              string
 }
 
-func (d *Dino) State() *DinoState {
-	return &DinoState{
-		FreeMemory: d.memory.TotalFree(),
-		Memory:     d.memory.Layout().String(),
-		NewQueue:   d.newQueue.String(),
-		ReadyQueue: d.readyQueue.String(),
-	}
-}
 func (ds *DinoState) String() string {
-	return fmt.Sprintf("\n\tFree Memory: %d \n%s%s%s", ds.FreeMemory, ds.Memory, ds.NewQueue, ds.ReadyQueue)
+	return fmt.Sprintf("\n\tFree Memory: %d \n%s%s%s", ds.FreeMemory, ds.Memory, ds.NewQ, ds.InteractiveQ)
 }
 
 // Run a simulation of the Dino, during max_epoch iterations. If max_epoch <1, run indefinitely
@@ -50,18 +50,21 @@ func (d *Dino) Run(max_epoch int) {
 	for i := 0; i < max_epoch || max_epoch < 1; i++ {
 		fmt.Println("--------------------------------------o--------------------------------------")
 		fmt.Printf("                                      %d                                      \n", i)
-		err := d.Step()
+		state, err := d.Step()
 		if err != nil {
 			fmt.Printf("Error!: %s \n", err.Error())
 		}
 
-		fmt.Printf("%s\n", d.State().String())
+		fmt.Printf("%s\n", state.String())
 		fmt.Printf("                                      %d                                      \n", i)
 		fmt.Println("--------------------------------------o--------------------------------------\n\n\n\n")
 	}
 }
 
-func (d *Dino) Step() (err error) {
+func (d *Dino) Step() (state *DinoState, err error) {
+	d.state.Message = ""
+	d.state.ExtFragmentation = false
+
 	new := d.newQueue
 	ready := d.readyQueue
 
@@ -76,11 +79,11 @@ func (d *Dino) Step() (err error) {
 		}
 
 		p, _ := new.Read()
-		memoryHasSpace = d.memory.HasSpace(p.SizeInKB)
+		memoryHasSpace = d.Memory.HasSpace(p.SizeInKB)
 
 		if memoryHasSpace {
 			//Is when the 'dispatcher' takes an element from 'new' to 'ready'
-			err := d.memory.AllocateWorstFit(p)
+			err := d.Memory.AllocateWorstFit(p)
 			if err != nil {
 				panic(err.Error())
 			}
@@ -89,34 +92,43 @@ func (d *Dino) Step() (err error) {
 				panic("Error while getting process from New queue")
 			}
 			ready.Add(p)
-		} else if totalFree := d.memory.TotalFree(); p.SizeInKB <= totalFree {
-			fmt.Printf("\tFragmentation exists. The process %s with size %d would fit in the %dKB of free memory if it was compacted\n", p.Name, p.SizeInKB, totalFree)
+		} else if totalFree := d.Memory.TotalFree(); p.SizeInKB <= totalFree {
+			d.state.ExtFragmentation = true
+			d.state.FragmentationProcess = p
 		}
-
 	}
 
 	processReady, err := ready.Get()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	d.CPU(processReady)
 	if processReady.ProgramCounter >= processReady.Lifespan() {
-		fmt.Printf("\n%s completed its execution. \nReleasing from memory... ", processReady.Name)
-		deleted, err := d.memory.ReleaseProcess(processReady)
+		deleted, err := d.Memory.ReleaseProcess(processReady)
 		if deleted && err == nil {
-			fmt.Printf("success.\n")
+			d.state.Message = fmt.Sprintf("Process %s released from memory")
 		} else if err != nil {
+			d.state.Message = fmt.Sprintf("Problems releasing %s from memory")
 			fmt.Printf("error: %s\n", err.Error())
 		}
 	} else {
 		ready.Add(processReady)
 	}
-	return nil
+
+	d.state.FreeMemory = d.Memory.TotalFree()
+	d.state.Memory = d.Memory.Layout()
+	d.state.NewQ = d.newQueue.String()
+	d.state.InteractiveQ = d.readyQueue.String()
+	return d.state, nil
 }
 
 func (d *Dino) CPU(p *Process) {
 	//TODO change this for something more sophisticated
 	p.ProgramCounter++
-	fmt.Printf("\tCPU:   Process '%s': (%d/%d) executed", p.Name, p.ProgramCounter, p.Lifespan())
+	d.state.ExecutedByCPU = p
+}
+
+func (d *Dino) MemorySize() int {
+	return d.memorySize
 }

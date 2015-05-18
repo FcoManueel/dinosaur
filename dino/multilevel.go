@@ -1,6 +1,9 @@
 package dino
 
-import "errors"
+import (
+	"errors"
+	"github.com/stretchr/stew/slice"
+)
 
 // MultilevelQueue is a scheduler of schedulers
 type MultilevelQueue struct {
@@ -65,10 +68,10 @@ func (m *MultilevelQueue) Len() int {
 	return length
 }
 
-func (m *MultilevelQueue) String() string {
-	str := "\n\n\t\t--------------------- " + m.name + " ---------------------\n"
-	for i, _ := range m.queues {
-		str += m.queues[i].String() + "\n"
-	}
-	return str
+func (m *MultilevelQueue) String() []string {
+	//	str := "\n\n\t\t--------------------- " + m.name + " ---------------------\n"
+	//	for i, _ := range m.queues {
+	//		str += m.queues[i].String() + "\n"
+	//	}
+	return slice.PlusStrings(m.queues[0].String(), m.queues[1].String())
 }

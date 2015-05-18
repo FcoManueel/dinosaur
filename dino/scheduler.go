@@ -8,7 +8,7 @@ type Scheduler interface {
 	Read() (*Process, error) // Read must return the same as get, without deletion
 	Len() int
 	Name() string
-	String() string
+	String() []string
 }
 
 // Dispatcher: Se encarga de mover procesos de la cola de Ready hacia el CPU para su ejecución (realiza el cambio de contexto)
