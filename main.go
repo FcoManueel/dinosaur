@@ -10,7 +10,7 @@ import (
 func main() {
 	fmt.Println("Hello dinosaur! Enjoy your evolution. ")
 
-	d := dino.New(20)
+	d := dino.New(200)
 
 	err := ui.Init()
 	if err != nil {
@@ -57,14 +57,12 @@ func main() {
 	halfWidth := 29
 
 	cpuExec := ui.NewPar("")
-	//cpuExec.Border.FgColor = scheme.BorderFg
 	cpuExec.Width = halfWidth
 	cpuExec.Height = 3
 	cpuExec.Border.Label = "CPU"
 	cpuExec.Y = 6
 
 	ioExec := ui.NewPar("")
-	//ioExec.Border.FgColor = scheme.BorderFg
 	ioExec.Width = halfWidth
 	ioExec.Height = 3
 	ioExec.Border.Label = "IO"
@@ -72,21 +70,21 @@ func main() {
 	ioExec.Y = 6
 
 	strsNew := []string{}
-	newProcs := ui.NewList()
-	newProcs.Items = strsNew
-	newProcs.Border.Label = "New"
-	newProcs.Height = 12
-	newProcs.Width = halfWidth
-	newProcs.Y = 9
+	news := ui.NewList()
+	news.Items = strsNew
+	news.Border.Label = "New"
+	news.Height = 12
+	news.Width = halfWidth
+	news.Y = 9
 
 	strsReady := []string{""}
-	readyProcs := ui.NewList()
-	readyProcs.Items = strsReady
-	readyProcs.Border.Label = "Ready"
-	readyProcs.Height = 2 + len(strsReady)
-	readyProcs.Width = halfWidth
-	readyProcs.X = 2 + newProcs.Width
-	readyProcs.Y = 9
+	readys := ui.NewList()
+	readys.Items = strsReady
+	readys.Border.Label = "Ready"
+	readys.Height = 2 + len(strsReady)
+	readys.Width = halfWidth
+	readys.X = 2 + news.Width
+	readys.Y = 9
 
 	mem := ui.NewGauge()
 	mem.Percent = 0
@@ -97,7 +95,6 @@ func main() {
 	mem.Border.LabelFgColor = scheme.BorderLabelTextFg
 
 	frag := ui.NewPar("")
-	//frag.Border.FgColor = scheme.BorderFg
 	frag.Width = 15
 	frag.Height = 3
 	frag.Border.Label = "Fragmented"
@@ -108,16 +105,17 @@ func main() {
 	memLayout := ui.NewPar("")
 	//memLayout.Border.FgColor = scheme.BorderFg
 	memLayout.Width = 17
-	memLayout.Height = 20
+	memLayout.Height = 24
 	memLayout.Border.Label = "Memory"
-	memLayout.X = 60
+	memLayout.X = 61
 	memLayout.Y = 0
+	memLayout.PaddingLeft = 3
 
 	draw := func(state *dino.DinoState, d *dino.Dino) {
 		mem.Percent = 100 - int(100*float32(state.FreeMemory)/float32(d.MemorySize()))
-		newProcs.Items = state.NewQ
-		readyProcs.Items = state.InteractiveQ
-		readyProcs.Height = 2 + len(readyProcs.Items)
+		news.Items = state.NewQ
+		readys.Items = state.InteractiveQ
+		readys.Height = 2 + len(readys.Items)
 		if state.ExecutedByCPU != nil {
 			cpuExec.PaddingLeft = 6
 			cpuExec.Text = "Executed: " + state.ExecutedByCPU.Name
@@ -133,7 +131,7 @@ func main() {
 			ioExec.Text = "Not executed"
 		}
 		if state.ExtFragmentation {
-			ioExec.PaddingLeft = 1
+			ioExec.PaddingLeft = 0
 			frag.Text = "Yes " + state.FragmentationProcess.Name
 		} else {
 			ioExec.PaddingLeft = 6
@@ -155,7 +153,7 @@ func main() {
 		}
 
 		memLayout.Text = memString
-		ui.Render(p, newProcs, readyProcs, mem, cpuExec, ioExec, frag, memLayout)
+		ui.Render(p, news, readys, mem, cpuExec, ioExec, frag, memLayout)
 	}
 
 	evt := ui.EventCh()
@@ -185,14 +183,4 @@ func main() {
 			}
 		}
 	}
-	//d.Run(100)
-	//  // I think that this way will make easier the communication with the front end
-	//    i := 0
-	//    for {
-	//        state := d.Step()
-	//        fmt.Printf(`\n----------------------------\n
-	//                     Step %d: %+v\n`, i, state)
-	//        SendToBrowser(state) // update clients
-	//        i++
-	//    }
 }

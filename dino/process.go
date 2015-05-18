@@ -8,8 +8,8 @@ import (
 
 const (
 	// Process Types
-	PT_INTERACTIVE    = ProcessType("interactive_process")
-	PT_NONINTERACTIVE = ProcessType("noninteractive_process")
+	PT_INTERACTIVE    = ProcessType("Interactive")
+	PT_NONINTERACTIVE = ProcessType("Noninteractive")
 
 	// Burst Types
 	BT_CPU = iota

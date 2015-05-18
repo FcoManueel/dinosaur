@@ -20,7 +20,7 @@ func New(totalMemory int) *Dino {
 	new := &Dino{
 		memorySize: totalMemory,
 		Memory:     make(Memory, totalMemory),
-		newQueue:   &Queue{name: "New Queue"},
+		newQueue:   &Queue{name: "New"},
 		readyQueue: &MultilevelQueue{name: "Ready Multilevel", queues: []Scheduler{&Queue{name: string(PT_INTERACTIVE)}, &Queue{name: string(PT_NONINTERACTIVE)}}},
 		state:      &DinoState{},
 	}
@@ -103,7 +103,11 @@ func (d *Dino) Step() (state *DinoState, err error) {
 		return nil, err
 	}
 
-	d.CPU(processReady)
+	if processReady.Bursts[0] == BT_CPU {
+		d.CPU(processReady)
+	} else if processReady.Bursts[0] == BT_IO {
+		d.IO(processReady)
+	}
 	if processReady.ProgramCounter >= processReady.Lifespan() {
 		deleted, err := d.Memory.ReleaseProcess(processReady)
 		if deleted && err == nil {
@@ -124,9 +128,19 @@ func (d *Dino) Step() (state *DinoState, err error) {
 }
 
 func (d *Dino) CPU(p *Process) {
-	//TODO change this for something more sophisticated
 	p.ProgramCounter++
+	if p.Bursts[0] == BT_CPU && len(p.Bursts) > 1 {
+		p.Bursts = p.Bursts[1 : len(p.Bursts)-1]
+	}
 	d.state.ExecutedByCPU = p
+}
+
+func (d *Dino) IO(p *Process) {
+	p.ProgramCounter++
+	if p.Bursts[0] == BT_IO && len(p.Bursts) > 1 {
+		p.Bursts = p.Bursts[1 : len(p.Bursts)-1]
+	}
+	d.state.ExecutedByIO = p
 }
 
 func (d *Dino) MemorySize() int {
